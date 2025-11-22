@@ -131,11 +131,12 @@
             pointer-events: none; 
         }
 
-        /* VIDEO OVERLAY STYLING */
+        /* VIDEO OVERLAY STYLING - RESTORED */
         #layer-video {
             z-index: 3; 
-            mix-blend-mode: overlay; 
+            mix-blend-mode: overlay; /* Blends nicely with rust textures */
             pointer-events: none;
+            /* Masking ensures video stays ON the object */
             -webkit-mask-size: contain;
             mask-size: contain;
             -webkit-mask-position: center;
@@ -283,12 +284,11 @@
             left: 24px;
             right: auto;
             top: 24px;
-            pointer-events: none; /* Prevent text from blocking clicks */
+            pointer-events: none; 
         }
         
-        /* Instruction prompts */
         .instruction-text {
-            pointer-events: none; /* Prevent text from blocking clicks */
+            pointer-events: none; 
         }
         
         .hidden-opacity {
@@ -342,7 +342,7 @@
             <!-- Layer 4: Catastrophe -->
             <img id="layer-catastrophe" class="object-layer" alt="Stage 4: Catastrophe" style="opacity: 0;">
             
-            <!-- Layer 5: Video Overlay (Masked to object) -->
+            <!-- Layer 5: Video Overlay (Masked to object) - RESTORED -->
             <video id="layer-video" class="object-layer" loop muted playsinline style="opacity: 0; width: 100%; height: 100%;">
                  <!-- Source tag set by JS -->
             </video>
@@ -406,7 +406,7 @@
             CATASTROPHE_START: 20.0 
         };
         
-        // OBJECT DATA - UPDATED WITH CORRECT FILE NAMES FROM YOUR SCREENSHOT
+        // OBJECT DATA - Using correct filenames from your structure
         const OBJECT_DATA = [
             { 
                 id: 0, 
@@ -575,7 +575,7 @@
                 videoLayer.play().catch(e => {}); 
                 videoLayer.style.opacity = 0;
                 
-                // Apply mask
+                // Apply mask (This ensures video ONLY shows on the object)
                 const maskUrl = `url('${data.clean}')`;
                 videoLayer.style.webkitMaskImage = maskUrl;
                 videoLayer.style.maskImage = maskUrl;
@@ -612,6 +612,7 @@
             
             currentZoom = newZoom;
             
+            // If zooming out to 1.0, center the object
             if (currentZoom <= 1.0) {
                 panX = 0;
                 panY = 0;
@@ -693,14 +694,14 @@
         }
 
         function updateLayerOpacities() {
-            // Post-Max Zoom State: Exit behavior
+            // Post-Max Zoom State: Exit behavior (Low opacity video, Full catastrophe)
             if (maxZoomReached) {
                 if (catastropheLayer) catastropheLayer.style.opacity = 1.0;
                 
                 // Video remains at low opacity (0.3) for exit effect
                 if (videoLayer) videoLayer.style.opacity = 0.3;
                 
-                // Other layers fade out normally
+                // Other layers fade out normally (doesn't really matter as catastrophe is 1.0)
                 if (decay1Layer) decay1Layer.style.opacity = Math.min(1.0, getLayerProgress(1.0, 5.0));
                 if (decay2Layer) decay2Layer.style.opacity = Math.min(1.0, getLayerProgress(5.0, 10.0));
                 return; 
@@ -748,7 +749,6 @@
             } else {
                 // Normal state
                 scrollPrompt.style.opacity = '1';
-                scrollPrompt.textContent = maxZoomReached ? "ZOOM OUT TO COMPLETE" : "SCROLL TO ZOOM • DRAG TO EXPLORE";
                 clickPrompt.style.opacity = '0';
             }
         }
