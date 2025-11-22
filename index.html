@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rust Decay Study | Interactive Analysis</title>
     
     <!-- Tailwind CSS CDN -->
@@ -16,6 +16,7 @@
             overflow: hidden; 
             background-color: #000;
             color: #FFF;
+            touch-action: none; 
         }
         
         #data-log, #object-name-display-container, .mono-font {
@@ -51,11 +52,12 @@
             font-weight: 700; 
             letter-spacing: 0.15em;
             text-transform: uppercase;
+            text-align: center;
         }
 
         .select-btn {
-            width: 160px;
-            height: 160px;
+            width: 140px;
+            height: 140px;
             background-color: #0a0a0a;
             border: 1px solid #444;
             transition: all 0.3s ease;
@@ -65,6 +67,7 @@
             align-items: center;
             position: relative;
             overflow: hidden;
+            flex-shrink: 0;
         }
         
         .select-btn::after {
@@ -79,21 +82,21 @@
             transition: all 0.3s;
         }
 
-        .select-btn:hover {
+        .select-btn:hover, .select-btn:active {
             transform: translateY(-5px);
             border-color: #FFFFFF; 
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
         }
         
-        .select-btn:hover::after {
+        .select-btn:hover::after, .select-btn:active::after {
             border-color: #FFF;
             width: 100%;
             height: 100%;
         }
 
         .btn-image {
-            width: 85%; 
-            height: 85%; 
+            width: 80%; 
+            height: 80%; 
             object-fit: contain; 
         }
         
@@ -106,7 +109,7 @@
         #interactive-screen:active {
             cursor: grabbing;
         }
-
+        
         #object-container {
             position: absolute; 
             top: 50%;
@@ -131,12 +134,10 @@
             pointer-events: none; 
         }
 
-        /* VIDEO OVERLAY STYLING - RESTORED */
         #layer-video {
             z-index: 3; 
-            mix-blend-mode: overlay; /* Blends nicely with rust textures */
+            mix-blend-mode: overlay; 
             pointer-events: none;
-            /* Masking ensures video stays ON the object */
             -webkit-mask-size: contain;
             mask-size: contain;
             -webkit-mask-position: center;
@@ -150,7 +151,7 @@
             background-color: #000;
             color: #FFFFFF; 
             overflow: hidden; 
-            padding: 30px;
+            padding: 20px;
             height: 100vh; 
         }
         
@@ -161,22 +162,8 @@
             position: relative;
         }
         
-        .data-panel::before {
-            content: '';
-            position: absolute;
-            top: -1px; left: -1px;
-            width: 20px; height: 20px;
-            border-top: 2px solid #FFF;
-            border-left: 2px solid #FFF;
-        }
-        .data-panel::after {
-            content: '';
-            position: absolute;
-            bottom: -1px; right: -1px;
-            width: 20px; height: 20px;
-            border-bottom: 2px solid #FFF;
-            border-right: 2px solid #FFF;
-        }
+        .data-panel::before { content: ''; position: absolute; top: -1px; left: -1px; width: 20px; height: 20px; border-top: 2px solid #FFF; border-left: 2px solid #FFF; }
+        .data-panel::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 20px; height: 20px; border-bottom: 2px solid #FFF; border-right: 2px solid #FFF; }
 
         #data-log {
              white-space: pre-wrap; 
@@ -189,10 +176,6 @@
              color: #ddd;
         }
         
-        #data-log::-webkit-scrollbar { width: 6px; }
-        #data-log::-webkit-scrollbar-track { background: #111; }
-        #data-log::-webkit-scrollbar-thumb { background: #444; }
-
         .typing-cursor {
             display: inline-block;
             width: 8px;
@@ -204,20 +187,27 @@
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        /* STAGE SELECTOR: Flex column to fit all items */
         #stage-selection-list {
             display: flex;
-            flex-direction: column;
-            height: 100%; 
-            gap: 10px; 
-            overflow: hidden;
+            flex-direction: row; 
+            width: 100%;
+            height: 80px;
+            gap: 8px; 
+            overflow-x: auto;
             padding: 2px;
+        }
+        @media (min-width: 768px) {
+            #stage-selection-list {
+                flex-direction: column;
+                height: 100%;
+                width: auto;
+            }
         }
 
         .stage-selector {
             flex: 1; 
-            width: 100%; 
-            min-height: 0; 
+            min-width: 70px; 
+            height: 100%; 
             border: 1px solid #333; 
             transition: all 0.2s ease;
             cursor: pointer;
@@ -226,10 +216,6 @@
             justify-content: center; 
             background: #050505;
             position: relative;
-        }
-        .stage-selector:hover {
-            border-color: #888;
-            background-color: #111;
         }
         .stage-selector.active {
             border-color: #FFF;
@@ -241,7 +227,7 @@
             width: 100%;
             height: 100%;
             object-fit: contain; 
-            padding: 8px;
+            padding: 4px;
         }
 
         #data-main-image-container {
@@ -267,7 +253,7 @@
             display: grid;
             grid-template-columns: 1fr; 
             grid-template-rows: 1fr 1fr; 
-            gap: 1.5rem;
+            gap: 1rem;
             height: 100%;
             overflow: hidden; 
         }
@@ -275,25 +261,24 @@
         @media (min-width: 1024px) {
             .data-content-wrapper {
                 grid-template-rows: 1.2fr 0.8fr; 
+                gap: 1.5rem;
             }
         }
         
         #object-name-display-container {
             direction: ltr;
             text-align: left;
-            left: 24px;
+            left: 16px;
             right: auto;
-            top: 24px;
+            top: 16px;
             pointer-events: none; 
         }
         
         .instruction-text {
             pointer-events: none; 
-        }
-        
-        .hidden-opacity {
-            opacity: 0;
-            transition: opacity 0.5s;
+            width: 100%;
+            text-align: center;
+            transition: color 0.3s, opacity 0.3s;
         }
     </style>
 </head>
@@ -301,13 +286,15 @@
 
     <!-- Stage 1: Selection Screen -->
     <div id="selection-screen" class="screen active" dir="ltr">
-        <h1 id="selection-title" class="text-5xl md:text-7xl mb-12 text-white tracking-widest font-bold">RUST DECAY STUDY</h1>
-        <p class="text-xl mb-12 text-gray-400 font-light tracking-wider">SELECT SPECIMEN FOR ANALYSIS</p>
+        <div class="flex flex-col items-center justify-center w-full h-full">
+            <h1 id="selection-title" class="text-4xl md:text-7xl mb-8 text-white tracking-widest font-bold text-center">RUST DECAY STUDY</h1>
+            <p class="text-lg md:text-xl mb-10 text-gray-400 font-light tracking-wider text-center">SELECT SPECIMEN FOR ANALYSIS</p>
 
-        <div id="object-selection" class="flex flex-wrap justify-center gap-8 p-4">
-            <!-- Buttons injected by JS -->
+            <div id="object-selection" class="flex flex-wrap justify-center gap-4 md:gap-8 p-4 w-full max-w-5xl">
+                <!-- Buttons injected by JS -->
+            </div>
+            <p class="mt-12 text-xs text-gray-600 tracking-widest uppercase text-center">Scroll/Pinch to Zoom • Drag to Pan</p>
         </div>
-        <p class="mt-12 text-xs text-gray-600 tracking-widest uppercase">Scroll to Zoom • Drag to Pan</p>
     </div>
 
     <!-- Stage 2: Interactive Screen -->
@@ -319,14 +306,14 @@
          onmouseleave="handleMouseUp(event)"
          ontouchstart="handleTouchStart(event)"
          ontouchmove="handleTouchMove(event)"
-         ontouchend="handleMouseUp(event)"
+         ontouchend="handleTouchEnd(event)"
          ondblclick="handleDoubleClick()"
          dir="ltr">
          
-        <p id="object-name-display-container" class="text-xl absolute top-6 left-6 z-30 text-white tracking-wider">
-            <span id="object-name-display" class="font-bold border-b border-white pb-1"></span> 
-            <span class="text-gray-400 ml-2 text-sm">ZOOM: <span id="zoom-level">1.0</span>x</span>
-        </p>
+        <div id="object-name-display-container" class="absolute top-4 left-4 z-30 text-white tracking-wider">
+            <span id="object-name-display" class="font-bold border-b border-white pb-1 text-xl"></span> 
+            <div class="text-gray-400 ml-2 text-sm mt-1">ZOOM: <span id="zoom-level">1.0</span>x</div>
+        </div>
         
         <div id="object-container">
             
@@ -342,7 +329,7 @@
             <!-- Layer 4: Catastrophe -->
             <img id="layer-catastrophe" class="object-layer" alt="Stage 4: Catastrophe" style="opacity: 0;">
             
-            <!-- Layer 5: Video Overlay (Masked to object) - RESTORED -->
+            <!-- Layer 5: Video Overlay (Masked) -->
             <video id="layer-video" class="object-layer" loop muted playsinline style="opacity: 0; width: 100%; height: 100%;">
                  <!-- Source tag set by JS -->
             </video>
@@ -350,40 +337,38 @@
         </div>
         
         <!-- Instructions -->
-        <p id="zoom-prompt" class="instruction-text absolute bottom-10 text-lg animate-pulse text-gray-400 mono-font tracking-widest">SCROLL UP TO ANALYZE DECAY</p>
-        <p id="double-click-prompt" class="instruction-text absolute bottom-10 text-lg text-green-400 mono-font tracking-widest hidden-opacity font-bold border border-green-400 px-4 py-2 bg-black/50">DOUBLE-CLICK TO ACCESS DATA</p>
+        <p id="zoom-prompt" class="instruction-text absolute bottom-10 text-lg animate-pulse text-gray-400 mono-font tracking-widest">SCROLL / PINCH TO ZOOM • DRAG TO PAN</p>
+        <p id="double-click-prompt" class="instruction-text absolute bottom-10 text-lg text-green-400 mono-font tracking-widest hidden-opacity font-bold">DOUBLE-CLICK / TAP TO ACCESS DATA</p>
     </div>
 
     <!-- Stage 3: Data Screen -->
-    <div id="data-screen" class="screen justify-start p-8" ondblclick="returnToSelection()" dir="ltr">
+    <div id="data-screen" class="screen justify-start p-4 md:p-8" ondblclick="returnToSelection()" dir="ltr">
         <div class="w-full max-w-[1600px] mx-auto flex flex-col h-full">
-            <div class="flex justify-between items-end mb-6 border-b border-white pb-2">
-                <h1 class="text-4xl font-bold tracking-wider" id="data-title">ANALYSIS COMPLETE</h1>
-                <span class="text-sm text-gray-400 mono-font">ID: <span id="data-id-display">00</span></span>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 border-b border-white pb-2 shrink-0">
+                <h1 class="text-2xl md:text-4xl font-bold tracking-wider" id="data-title">ANALYSIS COMPLETE</h1>
+                <span class="text-xs md:text-sm text-gray-400 mono-font mt-1 md:mt-0">ID: <span id="data-id-display">00</span></span>
             </div>
             
-            <div class="flex flex-col md:flex-row flex-grow overflow-hidden h-full gap-6">
+            <div class="flex flex-col md:flex-row flex-grow overflow-hidden h-full gap-4 md:gap-6">
                 
-                <!-- Left Panel: Decay Stages List -->
-                <div class="w-full md:w-64 flex-shrink-0 order-2 md:order-1 h-full flex flex-col">
-                    <h2 class="text-lg mb-4 text-gray-300 tracking-widest border-b border-gray-800 pb-1">DECAY STAGES</h2>
+                <!-- Decay Stages List (Bottom on Mobile, Left on Desktop) -->
+                <div class="w-full md:w-64 flex-shrink-0 order-3 md:order-1 flex flex-col h-auto md:h-full">
+                    <h2 class="text-sm md:text-lg mb-2 md:mb-4 text-gray-300 tracking-widest border-b border-gray-800 pb-1 hidden md:block">DECAY STAGES</h2>
                     <div id="stage-selection-list">
                         <!-- Stage buttons -->
                     </div>
-                    <p class="mt-4 text-xs text-gray-600 text-center uppercase tracking-widest">Double-click to Return</p>
+                    <p class="mt-2 md:mt-4 text-[10px] md:text-xs text-gray-600 text-center uppercase tracking-widest cursor-pointer" onclick="returnToSelection()">Double-tap to Return</p>
                 </div>
 
                 <!-- Right Panel: Main Display & Log -->
-                <div class="flex-grow order-1 md:order-2 h-full min-w-0">
+                <div class="flex-grow order-1 md:order-2 h-full min-w-0 flex flex-col overflow-hidden">
                     <div class="data-content-wrapper">
-                        <!-- 1. Main Image Display -->
                         <div class="data-panel flex justify-center items-center" id="data-main-image-container">
                             <img id="data-stage-image" alt="Selected Decay Stage">
                         </div>
                         
-                        <!-- 2. Log Analysis -->
                         <div class="data-panel flex flex-col overflow-hidden">
-                            <h2 class="text-lg mb-3 border-b border-gray-700 pb-2 text-gray-300 tracking-widest">
+                            <h2 class="text-sm md:text-lg mb-2 md:mb-3 border-b border-gray-700 pb-2 text-gray-300 tracking-widest">
                                 LOG ENTRY: <span id="log-stage-name" class="text-white font-bold">CATASTROPHE</span>
                             </h2>
                             <div class="flex-grow overflow-hidden relative">
@@ -406,7 +391,7 @@
             CATASTROPHE_START: 20.0 
         };
         
-        // OBJECT DATA - Using correct filenames from your structure
+        // OBJECT DATA
         const OBJECT_DATA = [
             { 
                 id: 0, 
@@ -417,10 +402,10 @@
                 catastrophe: "object0_rust3.png", 
                 video: "rust_video.mp4", 
                 logs: {
-                    clean: "ANALYSIS LOG [ID:00 - OLIVE TREE]\nSTAGE: CLEAN / BASELINE\n================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 0.0% (Nominal)\n> EST. TIME ELAPSED: 0 Years\n> SURFACE COLOR: #556B2F (Dark Olive Green)\n> TEXTURE CLASS: Smooth / Organic\n\n[STATUS: STABLE]\nSpecimen exhibits complete structural integrity. Cellular hydration at optimal levels (100%). No signs of external weathering or parasitic intrusion.\n\n[END OF LOG]",
-                    decay1: "ANALYSIS LOG [ID:00 - OLIVE TREE]\nSTAGE: DECAY I\n================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 12.4% (Surface Weathering)\n> EST. TIME ELAPSED: ~50 Years\n> SURFACE COLOR: #8B4513 (Saddle Brown)\n> TEXTURE CLASS: Rough / Dehydrated\n\n[STATUS: MINOR DEGRADATION]\nInitial signs of dehydration detected in outer layers. Bark integrity compromised by 15%. Micro-fractures appearing along the main trunk axis due to moisture loss.\n\n[END OF LOG]",
-                    decay2: "ANALYSIS LOG [ID:00 - OLIVE TREE]\nSTAGE: DECAY II\n================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 45.8% (Structural Rot)\n> EST. TIME ELAPSED: ~150 Years\n> SURFACE COLOR: #3E2723 (Black Bean)\n> TEXTURE CLASS: Splintered / Brittle\n\n[STATUS: ADVANCED DECAY]\nDeep fissures detected. Core stability reduced by 40%. Fungal colonization likely. Organic compounds breaking down into carbon-rich residue.\n\n[END OF LOG]",
-                    catastrophe: "ANALYSIS LOG [ID:00 - OLIVE TREE]\nSTAGE: CATASTROPHE\n================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 98.2% (Total Petrification)\n> EST. TIME ELAPSED: ~450 Years\n> SURFACE COLOR: #1A1A1A (Charcoal)\n> TEXTURE CLASS: Ash / Dust\n\n[STATUS: BIOLOGICAL CESSATION]\nLife functions terminated. Structural collapse imminent. Matter conversion to inorganic carbon dust complete. Specimen irretrievable.\n\n[END OF LOG]"
+                    clean: "ANALYSIS LOG [ID:00 - OLIVE TREE]\nSTAGE: CLEAN / BASELINE\n================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 0.0% (Nominal)\n> EST. TIME ELAPSED: 0 Years\n> SURFACE COLOR: #556B2F (Dark Olive Green)\n> TEXTURE CLASS: Smooth / Organic\n\n[STATUS: STABLE]\nSpecimen exhibits complete structural integrity.",
+                    decay1: "ANALYSIS LOG [ID:00 - OLIVE TREE]\nSTAGE: DECAY I\n================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 12.4% (Surface Weathering)\n> EST. TIME ELAPSED: ~50 Years\n> SURFACE COLOR: #8B4513 (Saddle Brown)\n> TEXTURE CLASS: Rough / Dehydrated\n\n[STATUS: MINOR DEGRADATION]\nInitial signs of dehydration detected in outer layers.",
+                    decay2: "ANALYSIS LOG [ID:00 - OLIVE TREE]\nSTAGE: DECAY II\n================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 45.8% (Structural Rot)\n> EST. TIME ELAPSED: ~150 Years\n> SURFACE COLOR: #3E2723 (Black Bean)\n> TEXTURE CLASS: Splintered / Brittle\n\n[STATUS: ADVANCED DECAY]\nDeep fissures detected. Core stability reduced by 40%.",
+                    catastrophe: "ANALYSIS LOG [ID:00 - OLIVE TREE]\nSTAGE: CATASTROPHE\n================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 98.2% (Total Petrification)\n> EST. TIME ELAPSED: ~450 Years\n> SURFACE COLOR: #1A1A1A (Charcoal)\n> TEXTURE CLASS: Ash / Dust\n\n[STATUS: BIOLOGICAL CESSATION]\nLife functions terminated. Structural collapse imminent."
                 }
             },
             { 
@@ -432,10 +417,10 @@
                 catastrophe: "object1_rust3.png", 
                 video: "rust_video.mp4", 
                 logs: {
-                    clean: "ANALYSIS LOG [ID:01 - PLANET EARTH]\nSTAGE: CLEAN / BASELINE\n=================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 0.0% (Stable)\n> EST. TIME ELAPSED: 0 Years\n> SURFACE COLOR: #1E90FF (Dodger Blue)\n> TEXTURE CLASS: Fluid / Dynamic\n\n[STATUS: HABITABLE]\nAtmospheric composition nitrogen-oxygen balance stable. Hydro-sphere covers 71% of surface. Biosphere activity nominal.\n\n[END OF LOG]",
-                    decay1: "ANALYSIS LOG [ID:01 - PLANET EARTH]\nSTAGE: DECAY I\n=================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 28.5% (Atmospheric Haze)\n> EST. TIME ELAPSED: ~30 Years\n> SURFACE COLOR: #708090 (Slate Gray)\n> TEXTURE CLASS: Hazy / Polluted\n\n[STATUS: WARNING]\nGlobal temperature anomaly +1.5°C. Cloud cover thickening with particulate matter. Ocean acidification initiating coral bleaching events.\n\n[END OF LOG]",
-                    decay2: "ANALYSIS LOG [ID:01 - PLANET EARTH]\nSTAGE: DECAY II\n=================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 65.0% (Biosphere Collapse)\n> EST. TIME ELAPSED: ~75 Years\n> SURFACE COLOR: #B22222 (Firebrick)\n> TEXTURE CLASS: Scorched / Volatile\n\n[STATUS: CRITICAL]\nRunaway greenhouse effect. Oceans evaporating. Landmasses scorched by UV radiation. Biodiversity index approaching zero.\n\n[END OF LOG]",
-                    catastrophe: "ANALYSIS LOG [ID:01 - PLANET EARTH]\nSTAGE: CATASTROPHE\n=================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 99.9% (Planetary Death)\n> EST. TIME ELAPSED: ~100+ Years\n> SURFACE COLOR: #2F4F4F (Dark Slate)\n> TEXTURE CLASS: Barren / Cratered\n\n[STATUS: SYSTEM FAILURE]\nAtmosphere stripped. Surface uninhabitable. Tectonic lock. Planet classified as dead world. No recovery possible.\n\n[END OF LOG]"
+                    clean: "ANALYSIS LOG [ID:01 - PLANET EARTH]\nSTAGE: CLEAN / BASELINE\n=================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 0.0% (Stable)\n> EST. TIME ELAPSED: 0 Years\n\n[STATUS: HABITABLE]\nAtmospheric composition nitrogen-oxygen balance stable.",
+                    decay1: "ANALYSIS LOG [ID:01 - PLANET EARTH]\nSTAGE: DECAY I\n=================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 28.5% (Atmospheric Haze)\n> EST. TIME ELAPSED: ~30 Years\n\n[STATUS: WARNING]\nGlobal temperature anomaly +1.5°C. Cloud cover thickening.",
+                    decay2: "ANALYSIS LOG [ID:01 - PLANET EARTH]\nSTAGE: DECAY II\n=================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 65.0% (Biosphere Collapse)\n> EST. TIME ELAPSED: ~75 Years\n\n[STATUS: CRITICAL]\nRunaway greenhouse effect. Oceans evaporating.",
+                    catastrophe: "ANALYSIS LOG [ID:01 - PLANET EARTH]\nSTAGE: CATASTROPHE\n=================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 99.9% (Planetary Death)\n> EST. TIME ELAPSED: ~100+ Years\n\n[STATUS: SYSTEM FAILURE]\nAtmosphere stripped. Surface uninhabitable. Tectonic lock."
                 }
             },
              { 
@@ -447,10 +432,10 @@
                 catastrophe: "object2_rust3.png", 
                 video: "rust_video.mp4", 
                 logs: {
-                    clean: "ANALYSIS LOG [ID:02 - WAX CANDLE]\nSTAGE: CLEAN / BASELINE\n===============================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 0.0% (Inert)\n> EST. TIME ELAPSED: 0 Hours\n> SURFACE COLOR: #FFF8DC (Cornsilk)\n> TEXTURE CLASS: Smooth / Waxy\n\n[STATUS: PRISTINE]\nHydrocarbon structure solid. Wick integrity 100%. Potential energy stored and ready for combustion.\n\n[END OF LOG]",
-                    decay1: "ANALYSIS LOG [ID:02 - WAX CANDLE]\nSTAGE: DECAY I\n===============================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 15.0% (Surface Softening)\n> EST. TIME ELAPSED: ~12 Hours\n> SURFACE COLOR: #F0E68C (Khaki)\n> TEXTURE CLASS: Tacky / Dust Accumulation\n\n[STATUS: WEATHERING]\nSurface accumulating environmental dust. Slight deformation due to ambient heat. Exterior sheen lost.\n\n[END OF LOG]",
-                    decay2: "ANALYSIS LOG [ID:02 - WAX CANDLE]\nSTAGE: DECAY II\n===============================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 55.0% (Structural Warp)\n> EST. TIME ELAPSED: ~24 Hours\n> SURFACE COLOR: #DAA520 (Goldenrod)\n> TEXTURE CLASS: Deformed / Melted\n\n[STATUS: MELTDOWN]\nCore integrity failing. Wick buried in deformed wax. Material separation occurring. Chemical breakdown accelerating.\n\n[END OF LOG]",
-                    catastrophe: "ANALYSIS LOG [ID:02 - WAX CANDLE]\nSTAGE: CATASTROPHE\n===============================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 100% (Amorphous Mass)\n> EST. TIME ELAPSED: ~48 Hours\n> SURFACE COLOR: #111111 (Soot Black)\n> TEXTURE CLASS: Sludge / Ash\n\n[STATUS: IRREVERSIBLE]\nComplete loss of form. Chemical structure degraded to carbon residue. Object unrecognizable.\n\n[END OF LOG]"
+                    clean: "ANALYSIS LOG [ID:02 - WAX CANDLE]\nSTAGE: CLEAN / BASELINE\n===============================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 0.0% (Inert)\n> EST. TIME ELAPSED: 0 Hours\n\n[STATUS: PRISTINE]\nHydrocarbon structure solid. Wick integrity 100%.",
+                    decay1: "ANALYSIS LOG [ID:02 - WAX CANDLE]\nSTAGE: DECAY I\n===============================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 15.0% (Surface Softening)\n> EST. TIME ELAPSED: ~12 Hours\n\n[STATUS: WEATHERING]\nSurface accumulating environmental dust. Slight deformation.",
+                    decay2: "ANALYSIS LOG [ID:02 - WAX CANDLE]\nSTAGE: DECAY II\n===============================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 55.0% (Structural Warp)\n> EST. TIME ELAPSED: ~24 Hours\n\n[STATUS: MELTDOWN]\nCore integrity failing. Wick buried in deformed wax.",
+                    catastrophe: "ANALYSIS LOG [ID:02 - WAX CANDLE]\nSTAGE: CATASTROPHE\n===============================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 100% (Amorphous Mass)\n> EST. TIME ELAPSED: ~48 Hours\n\n[STATUS: IRREVERSIBLE]\nComplete loss of form. Chemical structure degraded to carbon residue."
                 }
             },
             { 
@@ -462,10 +447,10 @@
                 catastrophe: "object3_rust3.png", 
                 video: "rust_video.mp4", 
                 logs: {
-                    clean: "ANALYSIS LOG [ID:03 - HUMAN SUBJECT]\nSTAGE: CLEAN / BASELINE\n==================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 0.0% (Homeostasis)\n> EST. TIME ELAPSED: 0 Years\n> SURFACE COLOR: #FFE4C4 (Bisque)\n> TEXTURE CLASS: Elastic / Organic\n\n[STATUS: VITAL]\nCellular regeneration active. Metabolic functions nominal. Telomere length optimal. Organ systems functioning at peak efficiency.\n\n[END OF LOG]",
-                    decay1: "ANALYSIS LOG [ID:03 - HUMAN SUBJECT]\nSTAGE: DECAY I\n==================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 22.0% (Senescence Start)\n> EST. TIME ELAPSED: ~40 Years\n> SURFACE COLOR: #D2B48C (Tan)\n> TEXTURE CLASS: Weathered / Lines\n\n[STATUS: AGING]\nDermal elasticity reducing. Collagen production slowing. Oxidative stress markers detected in cellular samples.\n\n[END OF LOG]",
-                    decay2: "ANALYSIS LOG [ID:03 - HUMAN SUBJECT]\nSTAGE: DECAY II\n==================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 60.0% (Tissue Necrosis)\n> EST. TIME ELAPSED: ~70 Years\n> SURFACE COLOR: #8B4513 (Saddle Brown)\n> TEXTURE CLASS: Leathery / Rigid\n\n[STATUS: FAILING]\nSystemic organ failure initiating. Regenerative capacity < 20%. Skeletal structure visible through atrophied tissue.\n\n[END OF LOG]",
-                    catastrophe: "ANALYSIS LOG [ID:03 - HUMAN SUBJECT]\nSTAGE: CATASTROPHE\n==================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 100% (Dust Conversion)\n> EST. TIME ELAPSED: ~100+ Years\n> SURFACE COLOR: #2F4F4F (Dark Gray)\n> TEXTURE CLASS: Particulate / Bone\n\n[STATUS: TERMINATED]\nBiological cessation complete. Matter converted to inorganic dust. Consciousness trace: None.\n\n[END OF LOG]"
+                    clean: "ANALYSIS LOG [ID:03 - HUMAN SUBJECT]\nSTAGE: CLEAN / BASELINE\n==================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 0.0% (Homeostasis)\n> EST. TIME ELAPSED: 0 Years\n\n[STATUS: VITAL]\nCellular regeneration active. Metabolic functions nominal.",
+                    decay1: "ANALYSIS LOG [ID:03 - HUMAN SUBJECT]\nSTAGE: DECAY I\n==================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 22.0% (Senescence Start)\n> EST. TIME ELAPSED: ~40 Years\n\n[STATUS: AGING]\nDermal elasticity reducing. Collagen production slowing.",
+                    decay2: "ANALYSIS LOG [ID:03 - HUMAN SUBJECT]\nSTAGE: DECAY II\n==================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 60.0% (Tissue Necrosis)\n> EST. TIME ELAPSED: ~70 Years\n\n[STATUS: FAILING]\nSystemic organ failure initiating. Regenerative capacity < 20%.",
+                    catastrophe: "ANALYSIS LOG [ID:03 - HUMAN SUBJECT]\nSTAGE: CATASTROPHE\n==================================\n\n[TECHNICAL DATA]\n> OXIDATION RATE: 100% (Dust Conversion)\n> EST. TIME ELAPSED: ~100+ Years\n\n[STATUS: TERMINATED]\nBiological cessation complete. Matter converted to inorganic dust. Consciousness trace: None."
                 }
             }
         ];
@@ -479,10 +464,15 @@
         let maxZoomReached = false; 
         let typingInterval = null; 
         
-        // Drag Interaction
+        // Drag/Touch Interaction
         let isDragging = false;
         let lastMouseX = 0;
         let lastMouseY = 0;
+        let lastTapTime = 0; 
+        
+        // Pinch Zoom Interaction
+        let initialPinchDistance = null;
+        let initialZoomBeforePinch = 1.0;
 
         // Elements 
         let decay1Layer, decay2Layer, catastropheLayer, videoLayer; 
@@ -535,7 +525,7 @@
                          onerror="this.onerror=null; this.src='https://placehold.co/120x120/000000/FFFFFF?text=${obj.name}'" 
                          alt="${obj.name}" 
                          class="btn-image">
-                    <span class="mt-4 text-sm text-white tracking-widest uppercase font-semibold">${obj.name}</span>
+                    <span class="mt-4 text-sm text-white tracking-widest uppercase font-semibold text-center leading-tight">${obj.name}</span>
                 `;
                 selectionContainer.appendChild(button);
             });
@@ -545,8 +535,9 @@
             panX = 0;
             panY = 0;
             maxZoomReached = false;
-            updateZoomPrompt();
+            initialPinchDistance = null;
             
+            updateZoomPrompt();
             if (typingInterval) clearInterval(typingInterval);
             
             setActiveScreen('selection-screen');
@@ -575,7 +566,6 @@
                 videoLayer.play().catch(e => {}); 
                 videoLayer.style.opacity = 0;
                 
-                // Apply mask (This ensures video ONLY shows on the object)
                 const maskUrl = `url('${data.clean}')`;
                 videoLayer.style.webkitMaskImage = maskUrl;
                 videoLayer.style.maskImage = maskUrl;
@@ -587,46 +577,61 @@
             panX = 0;
             panY = 0;
             maxZoomReached = false;
+            
+            if (zoomContainer) zoomContainer.classList.remove('crumbling');
+
             updateVisuals();
             updateZoomPrompt();
             
             setActiveScreen('interactive-screen');
         }
 
-        // --- Logic: Pan & Zoom ---
+        // --- Logic: Zoom & Interaction ---
         
         function updateVisuals() {
             if (zoomContainer) {
+                // We divide by currentZoom for panX/Y logic, so here we apply them directly.
+                // If we want 1:1 panning, the translation should be scaled by 1/zoom in CSS, or the logic in handlers should change.
+                // With `translate(${panX}px, ${panY}px) scale(${currentZoom})`, panX is in "scene coordinates".
+                // In handlers, we did `panX += deltaX / currentZoom`. This works.
+                
+                // Constraint Check before applying
+                const containerDim = document.getElementById('object-container').offsetWidth || 300; 
+                // Allow panning up to the edges of the zoomed image
+                const maxPan = (containerDim * (currentZoom - 1)) / 2; 
+                
+                if (currentZoom > 1.0) {
+                    panX = Math.max(-maxPan, Math.min(maxPan, panX));
+                    panY = Math.max(-maxPan, Math.min(maxPan, panY));
+                } else {
+                    panX = 0;
+                    panY = 0;
+                }
+
                 zoomContainer.style.transform = `translate(-50%, -50%) translate(${panX}px, ${panY}px) scale(${currentZoom})`;
             }
             document.getElementById('zoom-level').textContent = currentZoom.toFixed(1);
             updateLayerOpacities();
         }
 
-        function handleWheel(event) {
-            event.preventDefault();
-            const delta = event.deltaY * -0.01; 
-            
+        function applyZoom(delta) {
             let newZoom = currentZoom + delta;
             newZoom = Math.max(1.0, Math.min(MAX_ZOOM, newZoom));
-            
             currentZoom = newZoom;
             
-            // If zooming out to 1.0, center the object
-            if (currentZoom <= 1.0) {
-                panX = 0;
-                panY = 0;
-            } else {
-                // Constraint: Keep image inside view
-                const maxPan = (800 * (currentZoom - 1)) / 2; 
-                panX = Math.max(-maxPan, Math.min(maxPan, panX));
-                panY = Math.max(-maxPan, Math.min(maxPan, panY));
-            }
-
+            // Logic for visual update
             updateVisuals();
             handleZoomEndLogic();
         }
 
+        // Wheel (Mouse) - ZOOM
+        function handleWheel(event) {
+            event.preventDefault();
+            const delta = event.deltaY * -0.01; 
+            applyZoom(delta);
+        }
+
+        // Mouse Drag - PAN
         function handleMouseDown(event) {
             if (currentZoom > 1.0) {
                 isDragging = true;
@@ -646,7 +651,8 @@
             const deltaX = currentX - lastMouseX;
             const deltaY = currentY - lastMouseY;
             
-            // 1:1 Pan Logic
+            // Pan Logic: Move 1:1 with cursor
+            // Since CSS applies scale AFTER translate, we divide by zoom to match cursor movement
             panX += deltaX / currentZoom;
             panY += deltaY / currentZoom;
 
@@ -656,34 +662,78 @@
             updateVisuals();
         }
 
+        // Touch Start (Pan or Pinch)
         function handleTouchStart(event) {
-            if (event.touches.length === 1 && currentZoom > 1.0) {
+            if (event.touches.length === 1) {
                 isDragging = true;
                 lastMouseX = event.touches[0].clientX;
                 lastMouseY = event.touches[0].clientY;
+            } else if (event.touches.length === 2) {
+                isDragging = false; // Switch to zoom mode
+                initialPinchDistance = getDistance(event.touches);
+                initialZoomBeforePinch = currentZoom;
             }
         }
         
+        // Touch Move (Pan or Pinch)
         function handleTouchMove(event) {
-            if (!isDragging) return;
             event.preventDefault();
-            const touch = event.touches[0];
             
-            const deltaX = touch.clientX - lastMouseX;
-            const deltaY = touch.clientY - lastMouseY;
+            // 1. Pinch Zoom
+            if (event.touches.length === 2 && initialPinchDistance) {
+                const currentDist = getDistance(event.touches);
+                const scaleRatio = currentDist / initialPinchDistance;
+                
+                let newZoom = initialZoomBeforePinch * scaleRatio;
+                newZoom = Math.max(1.0, Math.min(MAX_ZOOM, newZoom));
+                
+                currentZoom = newZoom;
+                updateVisuals();
+                handleZoomEndLogic();
+                return;
+            }
+
+            // 2. Pan (One finger)
+            if (event.touches.length === 1 && isDragging && currentZoom > 1.0) {
+                const touch = event.touches[0];
+                const deltaX = touch.clientX - lastMouseX;
+                const deltaY = touch.clientY - lastMouseY;
+                
+                panX += deltaX / currentZoom;
+                panY += deltaY / currentZoom;
+                
+                lastMouseX = touch.clientX;
+                lastMouseY = touch.clientY;
+                
+                updateVisuals();
+            }
+        }
+        
+        function handleTouchEnd(event) {
+            isDragging = false;
+            if (event.touches.length < 2) {
+                initialPinchDistance = null;
+            }
             
-            panX += deltaX / currentZoom;
-            panY += deltaY / currentZoom;
-            
-            lastMouseX = touch.clientX;
-            lastMouseY = touch.clientY;
-            
-            updateVisuals();
+            // Mobile Double Tap
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTapTime;
+            if (tapLength < 300 && tapLength > 0) {
+                handleDoubleClick();
+                event.preventDefault();
+            }
+            lastTapTime = currentTime;
         }
 
         function handleMouseUp() {
             isDragging = false;
             document.body.style.cursor = 'grab';
+        }
+        
+        function getDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
         }
 
         // --- Transition Logic ---
@@ -694,25 +744,19 @@
         }
 
         function updateLayerOpacities() {
-            // Post-Max Zoom State: Exit behavior (Low opacity video, Full catastrophe)
             if (maxZoomReached) {
                 if (catastropheLayer) catastropheLayer.style.opacity = 1.0;
-                
-                // Video remains at low opacity (0.3) for exit effect
                 if (videoLayer) videoLayer.style.opacity = 0.3;
                 
-                // Other layers fade out normally (doesn't really matter as catastrophe is 1.0)
                 if (decay1Layer) decay1Layer.style.opacity = Math.min(1.0, getLayerProgress(1.0, 5.0));
                 if (decay2Layer) decay2Layer.style.opacity = Math.min(1.0, getLayerProgress(5.0, 10.0));
                 return; 
             }
             
-            // Normal Zoom In Logic
             if (decay1Layer) decay1Layer.style.opacity = getLayerProgress(1.0, 5.0);
             if (decay2Layer) decay2Layer.style.opacity = getLayerProgress(5.0, 10.0);
             if (catastropheLayer) catastropheLayer.style.opacity = getLayerProgress(10.0, 20.0);
 
-            // Video fades in strongly (up to 0.9) as we approach max zoom
             if (videoLayer) {
                 const videoProgress = getLayerProgress(5.0, MAX_ZOOM);
                 videoLayer.style.opacity = videoProgress * 0.9; 
@@ -720,22 +764,11 @@
         }
 
         function handleZoomEndLogic() {
-            // Check if we reached max zoom
             if (currentZoom >= MAX_ZOOM) {
                 maxZoomReached = true;
-                updateZoomPrompt();
-                // Make catastrophe visible immediately
                 if (catastropheLayer) catastropheLayer.style.opacity = 1.0;
             } 
-            
-            // Check if we are back at 1.05 (tolerance) AND max was reached previously
-            if (maxZoomReached && currentZoom <= 1.05) {
-                updateZoomPrompt(); // Show double click message
-                document.body.style.cursor = 'pointer'; 
-            } else {
-                document.body.style.cursor = isDragging ? 'grabbing' : 'grab';
-                if (!maxZoomReached) updateZoomPrompt(); 
-            }
+            updateZoomPrompt();
         }
         
         function updateZoomPrompt() {
@@ -743,13 +776,14 @@
             const clickPrompt = document.getElementById('double-click-prompt');
             
             if (maxZoomReached && currentZoom <= 1.05) {
-                // Cycle complete state
                 scrollPrompt.style.opacity = '0';
                 clickPrompt.style.opacity = '1';
+                document.body.style.cursor = 'pointer';
             } else {
-                // Normal state
                 scrollPrompt.style.opacity = '1';
+                scrollPrompt.textContent = maxZoomReached ? "ZOOM OUT TO COMPLETE" : "SCROLL / PINCH TO ZOOM • DRAG TO PAN";
                 clickPrompt.style.opacity = '0';
+                document.body.style.cursor = isDragging ? 'grabbing' : 'grab';
             }
         }
 
@@ -767,7 +801,6 @@
             
             setupDataStageSelectors(data);
             
-            // Start with catastrophe log
             const logText = data.logs['catastrophe'];
             typeWriter(logText, 'data-log');
             
@@ -824,13 +857,14 @@
         }
 
         function handleDoubleClick() {
-            // Strict condition: Only if max reached AND back at start (tolerance added)
             if (selectedObjectId !== null && maxZoomReached && currentZoom <= 1.05) {
                 updateDataScreen(selectedObjectId);
             }
         }
 
         function returnToSelection() {
+            const log = document.getElementById('data-log');
+            if(log) log.scrollTop = 0;
             initSelectionScreen();
         }
 
