@@ -203,7 +203,7 @@
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        /* STAGE SELECTOR */
+        /* STAGE SELECTOR: Flex column to fit all items */
         #stage-selection-list {
             display: flex;
             flex-direction: column;
@@ -283,6 +283,12 @@
             left: 24px;
             right: auto;
             top: 24px;
+            pointer-events: none; /* Prevent text from blocking clicks */
+        }
+        
+        /* Instruction prompts */
+        .instruction-text {
+            pointer-events: none; /* Prevent text from blocking clicks */
         }
         
         .hidden-opacity {
@@ -314,6 +320,7 @@
          ontouchstart="handleTouchStart(event)"
          ontouchmove="handleTouchMove(event)"
          ontouchend="handleMouseUp(event)"
+         ondblclick="handleDoubleClick()"
          dir="ltr">
          
         <p id="object-name-display-container" class="text-xl absolute top-6 left-6 z-30 text-white tracking-wider">
@@ -321,7 +328,7 @@
             <span class="text-gray-400 ml-2 text-sm">ZOOM: <span id="zoom-level">1.0</span>x</span>
         </p>
         
-        <div id="object-container" ondblclick="handleDoubleClick()">
+        <div id="object-container">
             
             <!-- Layer 1: Clean -->
             <img id="layer-clean" class="object-layer" alt="Stage 1: Clean">
@@ -343,8 +350,8 @@
         </div>
         
         <!-- Instructions -->
-        <p id="zoom-prompt" class="absolute bottom-10 text-lg animate-pulse text-gray-400 mono-font tracking-widest">SCROLL TO ZOOM • DRAG TO EXPLORE</p>
-        <p id="double-click-prompt" class="absolute bottom-10 text-lg text-green-400 mono-font tracking-widest hidden-opacity font-bold border border-green-400 px-4 py-2 bg-black/50">ZOOM OUT & DOUBLE-CLICK TO ACCESS DATA</p>
+        <p id="zoom-prompt" class="instruction-text absolute bottom-10 text-lg animate-pulse text-gray-400 mono-font tracking-widest">SCROLL UP TO ANALYZE DECAY</p>
+        <p id="double-click-prompt" class="instruction-text absolute bottom-10 text-lg text-green-400 mono-font tracking-widest hidden-opacity font-bold border border-green-400 px-4 py-2 bg-black/50">DOUBLE-CLICK TO ACCESS DATA</p>
     </div>
 
     <!-- Stage 3: Data Screen -->
@@ -399,7 +406,7 @@
             CATASTROPHE_START: 20.0 
         };
         
-        // OBJECT DATA with Dynamic Logs per Stage
+        // OBJECT DATA - UPDATED WITH CORRECT FILE NAMES FROM YOUR SCREENSHOT
         const OBJECT_DATA = [
             { 
                 id: 0, 
@@ -568,12 +575,10 @@
                 videoLayer.play().catch(e => {}); 
                 videoLayer.style.opacity = 0;
                 
-                // CRITICAL: Apply the clean image as a mask so video only shows on object
+                // Apply mask
                 const maskUrl = `url('${data.clean}')`;
                 videoLayer.style.webkitMaskImage = maskUrl;
                 videoLayer.style.maskImage = maskUrl;
-                
-                // Reset overlay blend mode
                 videoLayer.style.mixBlendMode = 'overlay';
             }
 
@@ -607,12 +612,11 @@
             
             currentZoom = newZoom;
             
-            // If zooming out to 1.0, center the object
             if (currentZoom <= 1.0) {
                 panX = 0;
                 panY = 0;
             } else {
-                // Constraint Logic: Calculate max pan allowed
+                // Constraint: Keep image inside view
                 const maxPan = (800 * (currentZoom - 1)) / 2; 
                 panX = Math.max(-maxPan, Math.min(maxPan, panX));
                 panY = Math.max(-maxPan, Math.min(maxPan, panY));
@@ -641,7 +645,7 @@
             const deltaX = currentX - lastMouseX;
             const deltaY = currentY - lastMouseY;
             
-            // 1:1 Pan Logic (divided by zoom to feel consistent)
+            // 1:1 Pan Logic
             panX += deltaX / currentZoom;
             panY += deltaY / currentZoom;
 
@@ -709,7 +713,6 @@
 
             // Video fades in strongly (up to 0.9) as we approach max zoom
             if (videoLayer) {
-                // Starts showing at zoom 5.0 (0) -> 20.0 (0.9)
                 const videoProgress = getLayerProgress(5.0, MAX_ZOOM);
                 videoLayer.style.opacity = videoProgress * 0.9; 
             }
@@ -724,13 +727,13 @@
                 if (catastropheLayer) catastropheLayer.style.opacity = 1.0;
             } 
             
-            // Check if we are back at 1.0 AND max was reached previously
-            if (maxZoomReached && currentZoom <= 1.0) {
+            // Check if we are back at 1.05 (tolerance) AND max was reached previously
+            if (maxZoomReached && currentZoom <= 1.05) {
                 updateZoomPrompt(); // Show double click message
                 document.body.style.cursor = 'pointer'; 
             } else {
                 document.body.style.cursor = isDragging ? 'grabbing' : 'grab';
-                if (!maxZoomReached) updateZoomPrompt(); // Show standard prompt
+                if (!maxZoomReached) updateZoomPrompt(); 
             }
         }
         
@@ -738,13 +741,14 @@
             const scrollPrompt = document.getElementById('zoom-prompt');
             const clickPrompt = document.getElementById('double-click-prompt');
             
-            if (maxZoomReached && currentZoom <= 1.0) {
+            if (maxZoomReached && currentZoom <= 1.05) {
                 // Cycle complete state
                 scrollPrompt.style.opacity = '0';
                 clickPrompt.style.opacity = '1';
             } else {
                 // Normal state
                 scrollPrompt.style.opacity = '1';
+                scrollPrompt.textContent = maxZoomReached ? "ZOOM OUT TO COMPLETE" : "SCROLL TO ZOOM • DRAG TO EXPLORE";
                 clickPrompt.style.opacity = '0';
             }
         }
@@ -795,10 +799,7 @@
                 listContainer.appendChild(button);
             });
             
-            // Default selected state (Catastrophe visual)
-            const mainImage = document.getElementById('data-stage-image');
-            mainImage.src = data.catastrophe;
-            document.getElementById('log-stage-name').textContent = 'CATASTROPHE';
+            selectDataStage('catastrophe', 'CATASTROPHE (FINAL STATE)', data.catastrophe);
         }
 
         function selectDataStage(key, name, file) {
@@ -811,13 +812,11 @@
             
             document.getElementById('log-stage-name').textContent = name;
 
-            // Update active selector UI
             document.querySelectorAll('.stage-selector').forEach(btn => {
                 btn.classList.remove('active');
             });
             document.querySelector(`.stage-selector[onclick*='${key}']`).classList.add('active');
             
-            // Update log text based on stage
             const data = OBJECT_DATA.find(o => o.id === selectedObjectId);
             if (data && data.logs && data.logs[key]) {
                 typeWriter(data.logs[key], 'data-log');
@@ -825,8 +824,8 @@
         }
 
         function handleDoubleClick() {
-            // Strict condition: Only if max reached AND back at start
-            if (selectedObjectId !== null && maxZoomReached && currentZoom <= 1.0) {
+            // Strict condition: Only if max reached AND back at start (tolerance added)
+            if (selectedObjectId !== null && maxZoomReached && currentZoom <= 1.05) {
                 updateDataScreen(selectedObjectId);
             }
         }
